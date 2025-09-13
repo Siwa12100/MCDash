@@ -1,19 +1,29 @@
 package de.gnmyt.mcdash;
 
-import com.sun.net.httpserver.HttpServer;
-import de.gnmyt.mcdash.api.config.*;
-import de.gnmyt.mcdash.api.controller.BackupController;
-import de.gnmyt.mcdash.api.handler.DefaultHandler;
-import de.gnmyt.mcdash.api.handler.StaticHandler;
-import de.gnmyt.mcdash.commands.PasswordCommand;
-import org.bukkit.Bukkit;
-import org.bukkit.plugin.java.JavaPlugin;
-import org.reflections.Reflections;
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+
+import org.bukkit.Bukkit;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.reflections.Reflections;
+
+import com.sun.net.httpserver.HttpServer;
+
+import de.gnmyt.mcdash.api.config.AccountManager;
+import de.gnmyt.mcdash.api.config.BackupManager;
+import de.gnmyt.mcdash.api.config.ConfigurationManager;
+import de.gnmyt.mcdash.api.config.Metrics;
+import de.gnmyt.mcdash.api.config.SSHManager;
+import de.gnmyt.mcdash.api.config.ScheduleManager;
+import de.gnmyt.mcdash.api.config.UpdateManager;
+import de.gnmyt.mcdash.api.config.WorldManager;
+import de.gnmyt.mcdash.api.controller.BackupController;
+import de.gnmyt.mcdash.api.handler.DefaultHandler;
+import de.gnmyt.mcdash.api.handler.StaticHandler;
+import de.gnmyt.mcdash.commands.PasswordCommand;
+import de.gnmyt.mcdash.stats.StatsModule;
 
 public class MinecraftDashboard extends JavaPlugin {
 
@@ -29,6 +39,7 @@ public class MinecraftDashboard extends JavaPlugin {
     private static ScheduleManager scheduleManager;
     private static MinecraftDashboard instance;
     private static HttpServer server;
+    private StatsModule statsModule;
 
     @Override
     public void onEnable() {
@@ -43,6 +54,12 @@ public class MinecraftDashboard extends JavaPlugin {
         scheduleManager = new ScheduleManager(instance);
         if (!config.configExists()) config.generateDefault();
         metrics = new Metrics(this, 18915);
+
+        String serverId = getServer().getName(); // ou "ostal-neige"
+        if (serverId == null || serverId.isBlank()) serverId = "default";
+
+        this.statsModule = new StatsModule(this, serverId);
+        this.statsModule.start();
 
         try {
             server = HttpServer.create(new InetSocketAddress(config.getPort()), 0);
@@ -60,6 +77,11 @@ public class MinecraftDashboard extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (this.statsModule != null) {
+            this.statsModule.stop();
+            this.statsModule = null;
+        }
+
         if (server != null) server.stop(0);
         if (updateManager != null) updateManager.shutdownScheduler();
         server = null;
@@ -202,4 +224,6 @@ public class MinecraftDashboard extends JavaPlugin {
     public static ScheduleManager getScheduleManager() {
         return scheduleManager;
     }
+
+    public StatsModule getStatsModule() { return statsModule; }
 }

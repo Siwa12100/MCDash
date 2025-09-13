@@ -1,5 +1,18 @@
 package de.gnmyt.mcdash.panel.routes.backups;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import org.apache.commons.io.FileUtils;
+import org.bukkit.Bukkit;
+import org.bukkit.World;
+import org.bukkit.scheduler.BukkitRunnable;
+
 import de.gnmyt.mcdash.MinecraftDashboard;
 import de.gnmyt.mcdash.api.controller.BackupController;
 import de.gnmyt.mcdash.api.entities.BackupMode;
@@ -9,12 +22,6 @@ import de.gnmyt.mcdash.api.http.Request;
 import de.gnmyt.mcdash.api.http.ResponseController;
 import de.gnmyt.mcdash.api.json.ArrayBuilder;
 import de.gnmyt.mcdash.api.json.NodeBuilder;
-import org.apache.commons.io.FileUtils;
-import org.bukkit.Bukkit;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
 
 public class BackupRoute extends DefaultHandler {
 
@@ -24,43 +31,57 @@ public class BackupRoute extends DefaultHandler {
      * @return the list of all directories that should be backed up
      */
     public static ArrayList<File> getBackupDirectories(String mode) {
-        String[] modes = mode.split("");
-
-        for (int i = 0; i < modes.length; i++) {
-            for (int j = 0; j < modes.length; j++) {
-                if (i == j) continue;
-                if (modes[i].equals(modes[j])) return new ArrayList<>();
-            }
+        // 1) Valider et dédupliquer les “modes”
+        Set<Character> seen = new HashSet<>();
+        List<Character> modes = new ArrayList<>();
+        for (char c : mode.toCharArray()) {
+            if (!Character.isDigit(c)) return new ArrayList<>();  // refuse les chars non numériques
+            if (!seen.add(c)) return new ArrayList<>();           // doublon → retour vide (comportement original)
+            modes.add(c);
         }
 
         ArrayList<File> directories = new ArrayList<>();
 
-        for (String currentMode : modes) {
-            BackupMode backupMode = BackupMode.fromMode(Integer.parseInt(currentMode));
+        for (char currentModeChar : modes) {
+            BackupMode backupMode = BackupMode.fromMode(Character.digit(currentModeChar, 10));
             if (backupMode == null) return new ArrayList<>();
 
             if (backupMode == BackupMode.SERVER) {
                 File[] serverFolder = new File(".").listFiles();
                 directories.addAll(Arrays.asList(serverFolder != null ? serverFolder : new File[0]));
-                break;
+                break; // comportement original : si SERVER choisi, on s’arrête
             }
 
-            if (backupMode == BackupMode.WORLDS) Bukkit.getWorlds().forEach(world -> {
-                Bukkit.getScheduler().runTask(MinecraftDashboard.getInstance(), world::save);
-                directories.add(world.getWorldFolder());
-            });
+            if (backupMode == BackupMode.WORLDS) {
+                // Sauvegarder proprement chaque monde sur le thread principal
+                for (World world : Bukkit.getWorlds()) {
+                    new BukkitRunnable() {
+                        @Override public void run() {
+                            world.save();
+                        }
+                    }.runTask(MinecraftDashboard.getInstance());
+                    directories.add(world.getWorldFolder());
+                }
+            }
 
-            if (backupMode == BackupMode.PLUGINS) directories.add(new File("plugins"));
+            if (backupMode == BackupMode.PLUGINS) {
+                directories.add(new File("plugins"));
+            }
 
-            if (backupMode == BackupMode.CONFIGS)
-                directories.addAll(FileUtils.listFiles(new File("."), new String[]{"yml", "properties", "json"}, false));
+            if (backupMode == BackupMode.CONFIGS) {
+                // rassemble tous les .yml, .properties, .json à la racine
+                Collection<File> cfgs = FileUtils.listFiles(new File("."), new String[]{"yml", "properties", "json"}, false);
+                directories.addAll(cfgs);
+            }
 
-            if (backupMode == BackupMode.LOGS)
+            if (backupMode == BackupMode.LOGS) {
                 directories.addAll(Arrays.asList(new File("logs"), new File("crash-reports")));
+            }
         }
 
         return directories;
     }
+
 
     private final BackupController controller = MinecraftDashboard.getBackupController();
 
