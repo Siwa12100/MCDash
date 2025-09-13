@@ -1,4 +1,4 @@
-import {Dashboard, Extension, Folder, Group, Public, Save, Settings, Terminal, Event} from "@mui/icons-material";
+import {Dashboard, Extension, Folder, Group, Public, Save, Settings, Terminal, Event, QueryStats} from "@mui/icons-material";
 import Overview from "@/states/Root/pages/Overview";
 import {BanListProvider} from "@/states/Root/pages/Players/contexts/BanList";
 import Players from "@/states/Root/pages/Players";
@@ -18,9 +18,11 @@ import {WorldsProvider} from "@/states/Root/pages/Worlds/contexts/Worlds";
 import {t} from "i18next";
 import Scheduler from "@/states/Root/pages/Scheduler";
 import {ScheduleProvider} from "@/states/Root/pages/Scheduler/contexts/Schedules/SchedulesContext.jsx";
+import PlayerStats from "@/states/Root/pages/PlayerStats";
 
 export const routes = [
     {path: "/", element: <StatsProvider><Overview /></StatsProvider>},
+    {path: "/stats/players", element: <PlayerStats />},
     {path: "/players", element: <BanListProvider><WhiteListProvider><Players /></WhiteListProvider></BanListProvider>},
     {path: "/files/*", element: <Files />},
     {path: "/console", element: <Console />},
@@ -41,6 +43,11 @@ export const sidebar = [
         path: "/players",
         icon: <Group />,
         name: () => t("nav.players")
+    },
+    {
+        path: "/stats/players",
+        icon: <QueryStats />,
+        name: () => t("nav.players_stats")
     },
     {
         path: "/files",

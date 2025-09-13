@@ -17,12 +17,16 @@
     "overview": "Vue d'ensemble",
     "players": "Joueurs",
     "files": "Gestionnaire de fichiers",
+    "players_stats": "Stats joueurs",
     "console": "Console",
     "worlds": "Mondes",
     "plugins": "Plugins",
     "backups": "Sauvegardes",
     "schedules": "Planifications",
     "configuration": "Paramètres"
+  },
+  "players_stats": {
+    "concurrent_players": "Joueurs connectés"
   },
   "info": {
     "server_unavailable": "Le serveur est actuellement indisponible.",
