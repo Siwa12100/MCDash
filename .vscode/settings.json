@@ -1,4 +1,13 @@
 {
     "java.configuration.updateBuildConfiguration": "interactive",
-    "java.compile.nullAnalysis.mode": "automatic"
+    "java.compile.nullAnalysis.mode": "automatic", 
+    "java.errors.incompleteClasspath.severity": "ignore",
+    "java.configuration.runtimes": [
+        {
+            "name": "JavaSE-21",
+            "path": "/usr/lib/jvm/jdk-21-oracle-x64",
+            "default": true
+        }
+    ],
+    "java.jdt.ls.java.home": "/usr/lib/jvm/jdk-21-oracle-x64"
 }

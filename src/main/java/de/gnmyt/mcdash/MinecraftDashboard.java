@@ -1,6 +1,7 @@
 package de.gnmyt.mcdash;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -14,7 +15,6 @@ import com.sun.net.httpserver.HttpServer;
 import de.gnmyt.mcdash.api.config.AccountManager;
 import de.gnmyt.mcdash.api.config.BackupManager;
 import de.gnmyt.mcdash.api.config.ConfigurationManager;
-import de.gnmyt.mcdash.api.config.Metrics;
 import de.gnmyt.mcdash.api.config.SSHManager;
 import de.gnmyt.mcdash.api.config.ScheduleManager;
 import de.gnmyt.mcdash.api.config.UpdateManager;
@@ -29,7 +29,6 @@ public class MinecraftDashboard extends JavaPlugin {
 
     private static final ScheduledExecutorService executor = Executors.newScheduledThreadPool(4);
     private static ConfigurationManager config;
-    private static Metrics metrics;
     private static BackupController backupController;
     private static UpdateManager updateManager;
     private static AccountManager accountManager;
@@ -53,10 +52,9 @@ public class MinecraftDashboard extends JavaPlugin {
         backupController = new BackupController();
         scheduleManager = new ScheduleManager(instance);
         if (!config.configExists()) config.generateDefault();
-        metrics = new Metrics(this, 18915);
 
         String serverId = getServer().getName(); // ou "ostal-neige"
-        if (serverId == null || serverId.isBlank()) serverId = "default";
+        if (serverId.isBlank()) serverId = "default";
 
         this.statsModule = new StatsModule(this, serverId);
         this.statsModule.start();
@@ -106,7 +104,7 @@ public class MinecraftDashboard extends JavaPlugin {
         reflections.getSubTypesOf(DefaultHandler.class).forEach(clazz -> {
             try {
                 clazz.getDeclaredConstructor().newInstance().register();
-            } catch (Exception ignored) { }
+            } catch (IllegalAccessException | IllegalArgumentException | InstantiationException | NoSuchMethodException | SecurityException | InvocationTargetException ignored) { }
         });
     }
 
@@ -117,7 +115,7 @@ public class MinecraftDashboard extends JavaPlugin {
      */
     public static void disablePlugin(String message) {
         System.out.println(getPrefix()+message);
-        Bukkit.getPluginManager().disablePlugin(Bukkit.getPluginManager().getPlugin(getInstance().getName()));
+        Bukkit.getPluginManager().disablePlugin(getInstance());
     }
 
     /**

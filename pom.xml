@@ -17,7 +17,7 @@
   </properties>
 
   <build>
-    <finalName>agachaire-1-21-6-v1</finalName>
+    <finalName>agachaire-1-21-11-v1</finalName>
 
     <resources>
       <resource>
@@ -142,11 +142,11 @@
   </dependency>
 
 
-    <!-- API Paper 1.21.6 -->
+    <!-- API Paper 1.21.11 -->
     <dependency>
       <groupId>io.papermc.paper</groupId>
       <artifactId>paper-api</artifactId>
-      <version>1.21.6-R0.1-SNAPSHOT</version>
+      <version>1.21.11-R0.1-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
 
